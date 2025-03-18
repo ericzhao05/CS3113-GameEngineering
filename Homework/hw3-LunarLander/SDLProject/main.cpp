@@ -28,6 +28,11 @@ using namespace std;
 constexpr float GRAVITY = -0.3f;
 constexpr float ACCELERATION = 2.0f;
 constexpr float INITIAL_FUEL = 100.0f;
+constexpr int FONTBANK_SIZE = 16;
+constexpr int SPRITESHEET_DIMENSIONS = 16;
+GLuint g_font_texture_id;
+bool landed_on_safe = false;
+bool crashed_on_platform = false;
 
 
 // ––––– STRUCTS AND ENUMS ––––– //
@@ -35,10 +40,7 @@ struct GameState
 {
     Entity* player;
     Entity* platforms;
-    bool landed_safely = false;
-    bool crashed = false;
     float fuel = INITIAL_FUEL;
-    int score = 0;
 };
 
 // ––––– CONSTANTS ––––– //
@@ -122,6 +124,71 @@ GLuint load_texture(const char* filepath)
     return textureID;
 }
 
+void draw_text(ShaderProgram *program, GLuint font_texture_id, std::string text,
+               float font_size, float spacing, glm::vec3 position)
+{
+    // Scale the size of the fontbank in the UV-plane
+    // We will use this for spacing and positioning
+    float width = 1.0f / FONTBANK_SIZE;
+    float height = 1.0f / FONTBANK_SIZE;
+
+    // Instead of having a single pair of arrays, we'll have a series of pairs—one for
+    // each character. Don't forget to include <vector>!
+    std::vector<float> vertices;
+    std::vector<float> texture_coordinates;
+
+    // For every character...
+    for (int i = 0; i < text.size(); i++) {
+        // 1. Get their index in the spritesheet, as well as their offset (i.e. their
+        //    position relative to the whole sentence)
+        int spritesheet_index = (int) text[i];  // ascii value of character
+        float offset = (font_size + spacing) * i;
+        
+        // 2. Using the spritesheet index, we can calculate our U- and V-coordinates
+        float u_coordinate = (float) (spritesheet_index % FONTBANK_SIZE) / FONTBANK_SIZE;
+        float v_coordinate = (float) (spritesheet_index / FONTBANK_SIZE) / FONTBANK_SIZE;
+
+        // 3. Inset the current pair in both vectors
+        vertices.insert(vertices.end(), {
+            offset + (-0.5f * font_size), 0.5f * font_size,
+            offset + (-0.5f * font_size), -0.5f * font_size,
+            offset + (0.5f * font_size), 0.5f * font_size,
+            offset + (0.5f * font_size), -0.5f * font_size,
+            offset + (0.5f * font_size), 0.5f * font_size,
+            offset + (-0.5f * font_size), -0.5f * font_size,
+        });
+
+        texture_coordinates.insert(texture_coordinates.end(), {
+            u_coordinate, v_coordinate,
+            u_coordinate, v_coordinate + height,
+            u_coordinate + width, v_coordinate,
+            u_coordinate + width, v_coordinate + height,
+            u_coordinate + width, v_coordinate,
+            u_coordinate, v_coordinate + height,
+        });
+    }
+
+    // 4. And render all of them using the pairs
+    glm::mat4 model_matrix = glm::mat4(1.0f);
+    model_matrix = glm::translate(model_matrix, position);
+    
+    program->set_model_matrix(model_matrix);
+    glUseProgram(program->get_program_id());
+    
+    glVertexAttribPointer(program->get_position_attribute(), 2, GL_FLOAT, false, 0,
+                          vertices.data());
+    glEnableVertexAttribArray(program->get_position_attribute());
+    glVertexAttribPointer(program->get_tex_coordinate_attribute(), 2, GL_FLOAT, false, 0,
+                          texture_coordinates.data());
+    glEnableVertexAttribArray(program->get_tex_coordinate_attribute());
+    
+    glBindTexture(GL_TEXTURE_2D, font_texture_id);
+    glDrawArrays(GL_TRIANGLES, 0, (int) (text.size() * 6));
+    
+    glDisableVertexAttribArray(program->get_position_attribute());
+    glDisableVertexAttribArray(program->get_tex_coordinate_attribute());
+}
+
 void initialise()
 {
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
@@ -199,12 +266,11 @@ void initialise()
             float x_position = (col - column_heights.size()/2.0f) * 0.95;
             float y_position = -3.5f + (layer * (0.65f));
             
-            if (platform_index == 3 | platform_index == 9) {
+            if (platform_index == 3 || platform_index == 9) {
                 g_state.platforms[platform_index].set_entity_type(SAFE_PLATFORM);
             } else {
                 g_state.platforms[platform_index].set_entity_type(PLATFORM);
             }
-            
             g_state.platforms[platform_index].set_position(glm::vec3(x_position, y_position, 0.0f));
             g_state.platforms[platform_index].update(0.0f, NULL, NULL, 0);
             platform_index++;
@@ -221,6 +287,9 @@ void initialise()
         { 2, 6, 10, 14 }, // for George to move upwards,
         { 0, 4, 8, 12 }   // for George to move downwards
     };
+    
+    // Fonts
+    g_font_texture_id = load_texture(FONT_FILEPATH);
     
     glm::vec3 acceleration = glm::vec3(0.0f, GRAVITY, 0.0f);
 
@@ -255,10 +324,6 @@ void initialise()
 
 void process_input()
 {
-    //    g_state.player->set_movement(glm::vec3(0.0f));
-    g_state.player->set_acceleration(glm::vec3(0.0f, GRAVITY, 0.0f));
-    
-    
     SDL_Event event;
     while (SDL_PollEvent(&event))
     {
@@ -276,14 +341,14 @@ void process_input()
                         g_game_is_running = false;
                         break;
                         
-//                    case SDLK_SPACE:
-//                        // Jump
-//                        if (g_state.player->get_collided_bottom())
-//                        {
-//                            g_state.player->jump();
-//                            Mix_PlayChannel(NEXT_CHNL, g_jump_sfx, 0);
-//                        }
-//                        break;
+                        //                    case SDLK_SPACE:
+                        //                        // Jump
+                        //                        if (g_state.player->get_collided_bottom())
+                        //                        {
+                        //                            g_state.player->jump();
+                        //                            Mix_PlayChannel(NEXT_CHNL, g_jump_sfx, 0);
+                        //                        }
+                        //                        break;
                         
                     case SDLK_h:
                         // Stop music
@@ -302,32 +367,39 @@ void process_input()
         }
     }
     
+    if (landed_on_safe || crashed_on_platform){return;}
+    
+    g_state.player->set_acceleration(glm::vec3(0.0f, GRAVITY, 0.0f));
+        
     const Uint8 *key_state = SDL_GetKeyboardState(NULL);
     
     if (g_state.fuel > 0)
     {
         if (key_state[SDL_SCANCODE_LEFT])
         {
+            g_state.fuel -= 0.05f;
             g_state.player->accelerate(RIGHT, ACCELERATION);
         }
         else if (key_state[SDL_SCANCODE_RIGHT])
         {
+            g_state.fuel -= 0.05f;
             g_state.player->accelerate(LEFT, ACCELERATION);
         }
-        
         if (key_state[SDL_SCANCODE_UP])
         {
+            g_state.fuel -= 0.05f;
             g_state.player->accelerate(UP, ACCELERATION);
         }
-        
-        g_state.fuel -= 0.05f;
+        if (g_state.fuel < 0) {
+            g_state.fuel = 0;
+        }
     }
-
-
+    
     if (glm::length(g_state.player->get_movement()) > 1.0f)
     {
         g_state.player->normalise_movement();
     }
+    
 }
 
 void check_landing()
@@ -336,16 +408,27 @@ void check_landing()
         for (int i = 0; i < PLATFORM_COUNT; i++) {
             if (g_state.player->check_collision(&g_state.platforms[i])) {
                 if (g_state.platforms[i].get_entity_type() == SAFE_PLATFORM) {
-                    g_state.landed_safely = true;
-                    LOG("Landed safely on the landing pad!");
+                    landed_on_safe = true;
                 } else {
-                    g_state.crashed = true;
-                    LOG("Crashed! You landed on an obstacle!");
+                    crashed_on_platform = true;
                 }
-                break;
+                g_state.player->set_movement(glm::vec3(0.0f));
+                g_state.player->set_velocity(glm::vec3(0.0f));
+                g_state.player->set_acceleration(glm::vec3(0.0f));
+                return;
             }
         }
     }
+    
+    for (int i = 0; i < PLATFORM_COUNT; i++) {
+            if (g_state.player->check_collision(&g_state.platforms[i])) {
+                crashed_on_platform = true;
+                g_state.player->set_movement(glm::vec3(0.0f));
+                g_state.player->set_velocity(glm::vec3(0.0f));
+                g_state.player->set_acceleration(glm::vec3(0.0f));
+                return;
+            }
+        }
 }
 
 
@@ -365,25 +448,36 @@ void update()
 
     while (delta_time >= FIXED_TIMESTEP)
     {
-        if (!g_state.landed_safely && !g_state.crashed)
+        if (!landed_on_safe && !crashed_on_platform)
         {
             g_state.player->update(FIXED_TIMESTEP, NULL, g_state.platforms, PLATFORM_COUNT);
             check_landing();
         }
         delta_time -= FIXED_TIMESTEP;
     }
-
     g_accumulator = delta_time;
 }
 
 void render()
 {
     glClear(GL_COLOR_BUFFER_BIT);
-
+    
+    for (int i = 0; i < PLATFORM_COUNT; i++) {
+        g_state.platforms[i].render(&g_program);
+    }
+    
     g_state.player->render(&g_program);
 
-    for (int i = 0; i < PLATFORM_COUNT; i++) g_state.platforms[i].render(&g_program);
-
+    std::string fuel_message = "FUEL:" + std::to_string(g_state.fuel);
+    draw_text(&g_program, g_font_texture_id, fuel_message, 0.4f, 0.05f, glm::vec3(-4.5f, 3.5f, 0.0f));
+    
+    if (landed_on_safe)
+    {
+        draw_text(&g_program, g_font_texture_id, "MISSION ACCOMPLISHED", 0.5f, 0.05f, glm::vec3(-3.5f, 0.0f, 0.0f));
+    } else if (crashed_on_platform) {
+        draw_text(&g_program, g_font_texture_id, "MISSION FAILED", 0.5f, 0.05f, glm::vec3(-2.5f, 0.0f, 0.0f));
+    }
+    
     SDL_GL_SwapWindow(g_display_window);
 }
 
