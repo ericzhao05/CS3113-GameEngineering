@@ -27,6 +27,9 @@ private:
     glm::vec3 m_scale;
     glm::vec3 m_velocity;
     glm::vec3 m_acceleration;
+    bool m_win = false;
+    bool m_lose = false;
+    int fuel;
 
     glm::mat4 m_model_matrix;
 
@@ -126,6 +129,8 @@ public:
     bool      const get_collided_bottom() const { return m_collided_bottom; }
     bool      const get_collided_right() const { return m_collided_right; }
     bool      const get_collided_left() const { return m_collided_left; }
+    bool const get_win() const {return m_win;}
+    bool const get_lost() const {return m_lose;}
     float get_width() const { return m_width; }
     float get_height() const { return m_height; }
 

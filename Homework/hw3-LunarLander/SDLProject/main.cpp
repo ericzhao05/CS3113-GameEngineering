@@ -3,7 +3,7 @@
 #define LOG(argument) std::cout << argument << '\n'
 #define GL_GLEXT_PROTOTYPES 1
 #define FIXED_TIMESTEP 0.0166666f
-#define PLATFORM_COUNT 33
+#define PLATFORM_COUNT 11
 
 #ifdef _WINDOWS
 #include <GL/glew.h>
@@ -64,6 +64,7 @@ constexpr float MILLISECONDS_IN_SECOND = 1000.0;
 constexpr char SPRITESHEET_FILEPATH[] = "assets/george_0.png";
 constexpr char PLATFORM_FILEPATH[]    = "assets/platformPack_tile027.png";
 constexpr char FONT_FILEPATH[] = "assets/font1.png";
+constexpr char SAFE_FILEPATH[] = "assets/minecraftBlock.jpg";
 
 constexpr int NUMBER_OF_TEXTURES = 1;
 constexpr GLint LEVEL_OF_DETAIL  = 0;
@@ -210,7 +211,9 @@ void initialise()
     g_program.load(V_SHADER_PATH, F_SHADER_PATH);
     
     g_view_matrix = glm::mat4(1.0f);
-    g_projection_matrix = glm::ortho(-5.0f, 5.0f, -3.75f, 3.75f, -1.0f, 1.0f);
+    g_projection_matrix = glm::ortho(-5.0f, 5.0f, -3.75f, 3.75f, -1.0f, 1.0f);;
+//    (-5.0f * 1.2f, 5.0f * 1.2f, -3.75f * 1.1f, 3.75f * 1.1f, -1.0f * 1.1f, 1.0f * 1.1f);
+    
     
     g_program.set_projection_matrix(g_projection_matrix);
     g_program.set_view_matrix(g_view_matrix);
@@ -239,43 +242,47 @@ void initialise()
     
     // ––––– PLATFORMS ––––– //
     GLuint platform_texture_id = load_texture(PLATFORM_FILEPATH);
-    
+    GLuint safe_platform_texture_id = load_texture(SAFE_FILEPATH);
     g_state.platforms = new Entity[PLATFORM_COUNT];
     
-    // Set the type of every platform entity to PLATFORM
-    //    for (int i = 0; i < PLATFORM_COUNT; i++)
-    //    {
-    //        g_state.platforms[i].set_texture_id(platform_texture_id);
-    //        g_state.platforms[i].set_position(glm::vec3(i - PLATFORM_COUNT / 2.0f, -3.0f, 0.0f));
-    //        g_state.platforms[i].set_width(0.8f);
-    //        g_state.platforms[i].set_height(1.0f);
-    //        g_state.platforms[i].set_entity_type(PLATFORM);
-    //        g_state.platforms[i].update(0.0f, NULL, NULL, 0);
-    //    }
-    
-    vector<int> column_heights = {1, 2, 3, 4, 1, 4, 3, 2, 5, 1, 3, 4};
-    int platform_index = 0;
-    
-    for (int col = 0; col < column_heights.size(); col++) {
-        for (int layer = 0; layer < column_heights[col]; layer++) {
-            g_state.platforms[platform_index].set_texture_id(platform_texture_id);
-//            g_state.platforms[platform_index].set_position(glm::vec3(platform_index - PLATFORM_COUNT / 2.0f, -3.0f, 0.0f));
-            g_state.platforms[platform_index].set_width(0.8f);
-            g_state.platforms[platform_index].set_height(1.0f);
+//     Set the type of every platform entity to PLATFORM
+        for (int i = 1; i < PLATFORM_COUNT; i++)
+        {
             
-            float x_position = (col - column_heights.size()/2.0f) * 0.95;
-            float y_position = -3.5f + (layer * (0.65f));
-            
-            if (platform_index == 3 || platform_index == 9) {
-                g_state.platforms[platform_index].set_entity_type(SAFE_PLATFORM);
+            if (i == 5){
+                g_state.platforms[i].set_texture_id(safe_platform_texture_id);
+                g_state.platforms[i].set_position(glm::vec3(i - PLATFORM_COUNT / 2.0f, -3.0f, 0.0f));
+                g_state.platforms[i].set_width(0.8f);
+                g_state.platforms[i].set_height(1.0f);
+                g_state.platforms[i].set_entity_type(SAFE_PLATFORM);
+                g_state.platforms[i].update(0.0f, NULL, NULL, 0);
             } else {
-                g_state.platforms[platform_index].set_entity_type(PLATFORM);
+                if (i % 2 == 0){
+                    g_state.platforms[i].set_texture_id(platform_texture_id);
+                    g_state.platforms[i].set_position(glm::vec3(i - PLATFORM_COUNT / 2.0f, -2.5f, 0.0f));
+                    g_state.platforms[i].set_width(0.8f);
+                    g_state.platforms[i].set_height(1.0f);
+                    g_state.platforms[i].set_entity_type(PLATFORM);
+                    g_state.platforms[i].update(0.0f, NULL, NULL, 0);
+                } else {
+                    g_state.platforms[i].set_texture_id(platform_texture_id);
+                    g_state.platforms[i].set_position(glm::vec3(i - PLATFORM_COUNT / 2.0f, -2.0f, 0.0f));
+                    g_state.platforms[i].set_width(0.8f);
+                    g_state.platforms[i].set_height(1.0f);
+                    g_state.platforms[i].set_entity_type(PLATFORM);
+                    g_state.platforms[i].update(0.0f, NULL, NULL, 0);
+                }
             }
-            g_state.platforms[platform_index].set_position(glm::vec3(x_position, y_position, 0.0f));
-            g_state.platforms[platform_index].update(0.0f, NULL, NULL, 0);
-            platform_index++;
         }
-    }
+    
+    g_state.platforms[0].set_texture_id(platform_texture_id);
+    g_state.platforms[0].set_position(glm::vec3(2.0f, 1.0f, 0.0f));
+    g_state.platforms[0].set_width(0.8f);
+    g_state.platforms[0].set_height(1.0f);
+    g_state.platforms[0].set_entity_type(PLATFORM);
+    g_state.platforms[0].update(0.0f, NULL, NULL, 0);
+    g_state.platforms[0].set_velocity(glm::vec3(1.0f, 0.0f, 0.0f));
+    
     
     // ––––– PLAYER (GEORGE) ––––– //
     GLuint player_texture_id = load_texture(SPRITESHEET_FILEPATH);
@@ -367,7 +374,7 @@ void process_input()
         }
     }
     
-    if (landed_on_safe || crashed_on_platform){return;}
+    if (g_state.player->get_win() && g_state.player->get_lost()){return;}
     
     g_state.player->set_acceleration(glm::vec3(0.0f, GRAVITY, 0.0f));
         
@@ -402,34 +409,24 @@ void process_input()
     
 }
 
-void check_landing()
-{
-    if (g_state.player->get_collided_bottom()) {
-        for (int i = 0; i < PLATFORM_COUNT; i++) {
-            if (g_state.player->check_collision(&g_state.platforms[i])) {
-                if (g_state.platforms[i].get_entity_type() == SAFE_PLATFORM) {
-                    landed_on_safe = true;
-                } else {
-                    crashed_on_platform = true;
-                }
-                g_state.player->set_movement(glm::vec3(0.0f));
-                g_state.player->set_velocity(glm::vec3(0.0f));
-                g_state.player->set_acceleration(glm::vec3(0.0f));
-                return;
-            }
-        }
-    }
-    
-    for (int i = 0; i < PLATFORM_COUNT; i++) {
-            if (g_state.player->check_collision(&g_state.platforms[i])) {
-                crashed_on_platform = true;
-                g_state.player->set_movement(glm::vec3(0.0f));
-                g_state.player->set_velocity(glm::vec3(0.0f));
-                g_state.player->set_acceleration(glm::vec3(0.0f));
-                return;
-            }
-        }
-}
+//void check_landing()
+//{
+//    if (g_state.player->get_collided_bottom()) {
+//        for (int i = 0; i < PLATFORM_COUNT; i++) {
+//            if (g_state.player->check_collision(&g_state.platforms[i])) {
+//                if (g_state.platforms[i].get_entity_type() == SAFE_PLATFORM) {
+//                    landed_on_safe = true;
+//                } else {
+//                    crashed_on_platform = true;
+//                }
+//                g_state.player->set_movement(glm::vec3(0.0f));
+//                g_state.player->set_velocity(glm::vec3(0.0f));
+//                g_state.player->set_acceleration(glm::vec3(0.0f));
+//                return;
+//            }
+//        }
+//    }
+//}
 
 
 void update()
@@ -448,10 +445,16 @@ void update()
 
     while (delta_time >= FIXED_TIMESTEP)
     {
-        if (!landed_on_safe && !crashed_on_platform)
+        if (!g_state.player->get_win() && !g_state.player->get_lost())
         {
             g_state.player->update(FIXED_TIMESTEP, NULL, g_state.platforms, PLATFORM_COUNT);
-            check_landing();
+            if (g_state.platforms[0].get_position().x > 5.0f){
+                g_state.platforms[0].set_velocity(glm::vec3(-1.0f, 0.0f, 0.0f));
+            }
+            if (g_state.platforms[0].get_position().x < -5.0f){
+                g_state.platforms[0].set_velocity(glm::vec3(1.0f, 0.0f, 0.0f));
+            }
+            g_state.platforms[0].update(FIXED_TIMESTEP, NULL, g_state.player, 1);
         }
         delta_time -= FIXED_TIMESTEP;
     }
@@ -471,11 +474,11 @@ void render()
     std::string fuel_message = "FUEL:" + std::to_string(g_state.fuel);
     draw_text(&g_program, g_font_texture_id, fuel_message, 0.4f, 0.05f, glm::vec3(-4.5f, 3.5f, 0.0f));
     
-    if (landed_on_safe)
+    if (g_state.player->get_win() == true)
     {
-        draw_text(&g_program, g_font_texture_id, "MISSION ACCOMPLISHED", 0.5f, 0.05f, glm::vec3(-3.5f, 0.0f, 0.0f));
-    } else if (crashed_on_platform) {
-        draw_text(&g_program, g_font_texture_id, "MISSION FAILED", 0.5f, 0.05f, glm::vec3(-2.5f, 0.0f, 0.0f));
+        draw_text(&g_program, g_font_texture_id, "MISSION ACCOMPLISHED", 0.5f, 0.001f, glm::vec3(-4.8f, 0.0f, 0.0f));
+    } else if (g_state.player->get_lost() == true) {
+        draw_text(&g_program, g_font_texture_id, "MISSION FAILED", 0.5f, 0.05f, glm::vec3(-4.5f, 0.0f, 0.0f));
     }
     
     SDL_GL_SwapWindow(g_display_window);

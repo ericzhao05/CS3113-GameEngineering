@@ -64,6 +64,9 @@ Entity::Entity()
     m_animation_rows(0), m_animation_indices(nullptr), m_animation_time(0.0f),
     m_texture_id(0), m_velocity(0.0f), m_acceleration(0.0f), m_width(0.0f), m_height(0.0f)
 {
+    m_win = false;
+    m_lose = false;
+    fuel = 100;
     // Initialize m_walking with zeros or any default value
     for (int i = 0; i < SECONDS_PER_FRAME; ++i)
         for (int j = 0; j < SECONDS_PER_FRAME; ++j) m_walking[i][j] = 0;
@@ -82,6 +85,9 @@ Entity::Entity(GLuint texture_id, float speed, glm::vec3 acceleration, float jum
 {
     face_right();
     set_walking(walking);
+    m_win = false;
+    m_lose = false;
+    fuel = 100;
 }
 
 // Simpler constructor for partial initialization
@@ -91,6 +97,10 @@ Entity::Entity(GLuint texture_id, float speed,  float width, float height, Entit
     m_animation_rows(0), m_animation_indices(nullptr), m_animation_time(0.0f),
     m_texture_id(texture_id), m_velocity(0.0f), m_acceleration(0.0f), m_width(width), m_height(height),m_entity_type(EntityType)
 {
+    face_right();
+    m_win = false;
+    m_lose = false;
+    fuel = 100;
     // Initialize m_walking with zeros or any default value
     for (int i = 0; i < SECONDS_PER_FRAME; ++i)
         for (int j = 0; j < SECONDS_PER_FRAME; ++j) m_walking[i][j] = 0;
@@ -100,6 +110,10 @@ m_speed(speed), m_animation_cols(0), m_animation_frames(0), m_animation_index(0)
 m_animation_rows(0), m_animation_indices(nullptr), m_animation_time(0.0f),
 m_texture_id(texture_id), m_velocity(0.0f), m_acceleration(0.0f), m_width(width), m_height(height),m_entity_type(EntityType), m_ai_type(AIType), m_ai_state(AIState)
 {
+    face_right();
+    m_win = false;
+    m_lose = false;
+    fuel = 100;
 // Initialize m_walking with zeros or any default value
 for (int i = 0; i < SECONDS_PER_FRAME; ++i)
     for (int j = 0; j < SECONDS_PER_FRAME; ++j) m_walking[i][j] = 0;
@@ -170,6 +184,19 @@ void const Entity::check_collision_y(Entity *collidable_entities, int collidable
 
                 // Collision!
                 m_collided_top  = true;
+                if (collidable_entity->m_entity_type == SAFE_PLATFORM){
+                    m_win = true;
+                    m_lose = false;
+                    set_movement(glm::vec3(0.0f));
+                    set_velocity(glm::vec3(0.0f));
+                    set_acceleration(glm::vec3(0.0f));
+                } else {
+                    m_lose = true;
+                    m_win = false;
+                    set_movement(glm::vec3(0.0f));
+                    set_velocity(glm::vec3(0.0f));
+                    set_acceleration(glm::vec3(0.0f));
+                }
             } else if (m_velocity.y < 0)
             {
                 m_position.y      += y_overlap;
@@ -177,6 +204,19 @@ void const Entity::check_collision_y(Entity *collidable_entities, int collidable
 
                 // Collision!
                 m_collided_bottom  = true;
+                if (collidable_entity->m_entity_type == SAFE_PLATFORM){
+                    m_win = true;
+                    m_lose = false;
+                    set_movement(glm::vec3(0.0f));
+                    set_velocity(glm::vec3(0.0f));
+                    set_acceleration(glm::vec3(0.0f));
+                } else {
+                    m_lose = true;
+                    m_win = false;
+                    set_movement(glm::vec3(0.0f));
+                    set_velocity(glm::vec3(0.0f));
+                    set_acceleration(glm::vec3(0.0f));
+                }
             }
         }
     }
@@ -199,6 +239,19 @@ void const Entity::check_collision_x(Entity *collidable_entities, int collidable
 
                 // Collision!
                 m_collided_right  = true;
+                if (collidable_entity->m_entity_type == SAFE_PLATFORM){
+                    m_win = true;
+                    m_lose = false;
+                    set_movement(glm::vec3(0.0f));
+                    set_velocity(glm::vec3(0.0f));
+                    set_acceleration(glm::vec3(0.0f));
+                } else {
+                    m_lose = true;
+                    m_win = false;
+                    set_movement(glm::vec3(0.0f));
+                    set_velocity(glm::vec3(0.0f));
+                    set_acceleration(glm::vec3(0.0f));
+                }
 
             } else if (m_velocity.x < 0)
             {
@@ -207,12 +260,28 @@ void const Entity::check_collision_x(Entity *collidable_entities, int collidable
 
                 // Collision!
                 m_collided_left  = true;
+                if (collidable_entity->m_entity_type == SAFE_PLATFORM){
+                    m_win = true;
+                    m_lose = false;
+                    set_movement(glm::vec3(0.0f));
+                    set_velocity(glm::vec3(0.0f));
+                    set_acceleration(glm::vec3(0.0f));
+                } else {
+                    m_lose = true;
+                    m_win = false;
+                    set_movement(glm::vec3(0.0f));
+                    set_velocity(glm::vec3(0.0f));
+                    set_acceleration(glm::vec3(0.0f));
+                }
             }
         }
     }
 }
 void Entity::update(float delta_time, Entity *player, Entity *collidable_entities, int collidable_entity_count)
 {
+    
+    if (m_win || m_lose) return;
+    
     if (!m_is_active) return;
 
     m_collided_top    = false;
