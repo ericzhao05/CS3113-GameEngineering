@@ -26,6 +26,9 @@
 		DBDF1B692323DEEA007CECB1 /* SDL2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DBDF1B662323DEEA007CECB1 /* SDL2.framework */; };
 		DBDF1B6A2323DEEA007CECB1 /* SDL2_image.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DBDF1B672323DEEA007CECB1 /* SDL2_image.framework */; };
 		DBDF1B6B2323DEEA007CECB1 /* SDL2_mixer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DBDF1B682323DEEA007CECB1 /* SDL2_mixer.framework */; };
+		E868968F2DB223400058AD0B /* SDL2_image.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E868968C2DB223400058AD0B /* SDL2_image.framework */; };
+		E86896902DB223400058AD0B /* SDL2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E868968D2DB223400058AD0B /* SDL2.framework */; };
+		E86896912DB223400058AD0B /* SDL2_mixer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E868968E2DB223400058AD0B /* SDL2_mixer.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -76,6 +79,9 @@
 		DBDF1B662323DEEA007CECB1 /* SDL2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2.framework; path = ../../../../../Library/Frameworks/SDL2.framework; sourceTree = "<group>"; };
 		DBDF1B672323DEEA007CECB1 /* SDL2_image.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2_image.framework; path = ../../../../../Library/Frameworks/SDL2_image.framework; sourceTree = "<group>"; };
 		DBDF1B682323DEEA007CECB1 /* SDL2_mixer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2_mixer.framework; path = ../../../../../Library/Frameworks/SDL2_mixer.framework; sourceTree = "<group>"; };
+		E868968C2DB223400058AD0B /* SDL2_image.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2_image.framework; path = ../../../../../../Downloads/XcodeFrameworks/SDL2_image.framework; sourceTree = "<group>"; };
+		E868968D2DB223400058AD0B /* SDL2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2.framework; path = ../../../../../../Downloads/XcodeFrameworks/SDL2.framework; sourceTree = "<group>"; };
+		E868968E2DB223400058AD0B /* SDL2_mixer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2_mixer.framework; path = ../../../../../../Downloads/XcodeFrameworks/SDL2_mixer.framework; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -83,6 +89,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E868968F2DB223400058AD0B /* SDL2_image.framework in Frameworks */,
+				E86896902DB223400058AD0B /* SDL2.framework in Frameworks */,
+				E86896912DB223400058AD0B /* SDL2_mixer.framework in Frameworks */,
 				DBDF1B652323DEDF007CECB1 /* Cocoa.framework in Frameworks */,
 				DBDF1B632323DEDA007CECB1 /* OpenGL.framework in Frameworks */,
 				DBDF1B692323DEEA007CECB1 /* SDL2.framework in Frameworks */,
@@ -148,9 +157,12 @@
 		DBDF1B5F2323DE92007CECB1 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				E868968D2DB223400058AD0B /* SDL2.framework */,
 				DBDF1B672323DEEA007CECB1 /* SDL2_image.framework */,
 				DBDF1B682323DEEA007CECB1 /* SDL2_mixer.framework */,
 				DBDF1B662323DEEA007CECB1 /* SDL2.framework */,
+				E868968C2DB223400058AD0B /* SDL2_image.framework */,
+				E868968E2DB223400058AD0B /* SDL2_mixer.framework */,
 				DBDF1B642323DEDF007CECB1 /* Cocoa.framework */,
 				DBDF1B622323DEDA007CECB1 /* OpenGL.framework */,
 			);
@@ -197,6 +209,7 @@
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
+				Base,
 			);
 			mainGroup = DBDF1B462323DE3F007CECB1;
 			productRefGroup = DBDF1B502323DE3F007CECB1 /* Products */;
@@ -354,12 +367,15 @@
 					/Library/Frameworks/SDL2_image.framework/Versions/A/Headers,
 					/Library/Frameworks/SDL2.framework/Versions/A/Headers,
 					/Library/Frameworks/SDL2_mixer.framework/Versions/A/Headers,
+					/Library/Frameworks/SDL2.framework/Versions/A/Headers,
+					/Library/Frameworks/SDL2_image.framework/Versions/A/Headers,
 				);
 				"HEADER_SEARCH_PATHS[arch=*]" = (
 					/Library/Frameworks/SDL2_image.framework/Versions/A/Headers,
 					/Library/Frameworks/SDL2.framework/Versions/A/Headers,
 					/Library/Frameworks/SDL2_mixer.framework/Versions/A/Headers,
 				);
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -376,12 +392,15 @@
 					/Library/Frameworks/SDL2_image.framework/Versions/A/Headers,
 					/Library/Frameworks/SDL2.framework/Versions/A/Headers,
 					/Library/Frameworks/SDL2_mixer.framework/Versions/A/Headers,
+					/Library/Frameworks/SDL2.framework/Versions/A/Headers,
+					/Library/Frameworks/SDL2_image.framework/Versions/A/Headers,
 				);
 				"HEADER_SEARCH_PATHS[arch=*]" = (
 					/Library/Frameworks/SDL2_image.framework/Versions/A/Headers,
 					/Library/Frameworks/SDL2.framework/Versions/A/Headers,
 					/Library/Frameworks/SDL2_mixer.framework/Versions/A/Headers,
 				);
+				MACOSX_DEPLOYMENT_TARGET = 15.0;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
