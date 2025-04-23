@@ -13,6 +13,8 @@ public:
     void update(float delta_time) override;
     void render(ShaderProgram *program) override;
     
-    // ————— PROJECTILE METHODS ————— //
+
     void shoot_projectile(Entity* shooter);
+    void update_health_bars(const float& delta_time);
+    void update_enemy_health_bars(const float& delta_time);
 };

@@ -21,6 +21,9 @@
 		DBDF1B692323DEEA007CECB1 /* SDL2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DBDF1B662323DEEA007CECB1 /* SDL2.framework */; };
 		DBDF1B6A2323DEEA007CECB1 /* SDL2_image.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DBDF1B672323DEEA007CECB1 /* SDL2_image.framework */; };
 		DBDF1B6B2323DEEA007CECB1 /* SDL2_mixer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DBDF1B682323DEEA007CECB1 /* SDL2_mixer.framework */; };
+		E86896942DB849770058AD0B /* LevelB.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E86896932DB849760058AD0B /* LevelB.cpp */; };
+		E86896972DB84FFB0058AD0B /* menu.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E86896962DB84FF90058AD0B /* menu.cpp */; };
+		E868969A2DB88CCD0058AD0B /* LevelC.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E86896992DB88CCA0058AD0B /* LevelC.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -61,6 +64,12 @@
 		DBDF1B662323DEEA007CECB1 /* SDL2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2.framework; path = ../../../../../Library/Frameworks/SDL2.framework; sourceTree = "<group>"; };
 		DBDF1B672323DEEA007CECB1 /* SDL2_image.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2_image.framework; path = ../../../../../Library/Frameworks/SDL2_image.framework; sourceTree = "<group>"; };
 		DBDF1B682323DEEA007CECB1 /* SDL2_mixer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2_mixer.framework; path = ../../../../../Library/Frameworks/SDL2_mixer.framework; sourceTree = "<group>"; };
+		E86896922DB8496E0058AD0B /* LevelB.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LevelB.h; sourceTree = "<group>"; };
+		E86896932DB849760058AD0B /* LevelB.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = LevelB.cpp; sourceTree = "<group>"; };
+		E86896952DB84FF20058AD0B /* menu.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = menu.h; sourceTree = "<group>"; };
+		E86896962DB84FF90058AD0B /* menu.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = menu.cpp; sourceTree = "<group>"; };
+		E86896982DB88CC40058AD0B /* LevelC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LevelC.h; sourceTree = "<group>"; };
+		E86896992DB88CCA0058AD0B /* LevelC.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = LevelC.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -106,16 +115,22 @@
 				DBDF1B5C2323DE8D007CECB1 /* shaders */,
 				DBDF1B5A2323DE8D007CECB1 /* stb_image.h */,
 				DBDF1B522323DE3F007CECB1 /* main.cpp */,
-				8493D151286BFEC300217CD6 /* Entity.cpp */,
 				8493D152286BFEC300217CD6 /* Entity.h */,
-				8401114428864A3000A4D23F /* Map.cpp */,
+				8493D151286BFEC300217CD6 /* Entity.cpp */,
 				8401114528864A3000A4D23F /* Map.h */,
-				849F07992888D13900816376 /* Utility.cpp */,
+				8401114428864A3000A4D23F /* Map.cpp */,
 				849F079A2888D13900816376 /* Utility.h */,
-				849F079C2888DDF200816376 /* Scene.cpp */,
+				849F07992888D13900816376 /* Utility.cpp */,
 				849F079D2888DDF200816376 /* Scene.h */,
-				849F079F2888DF1D00816376 /* LevelA.cpp */,
+				849F079C2888DDF200816376 /* Scene.cpp */,
+				E86896952DB84FF20058AD0B /* menu.h */,
+				E86896962DB84FF90058AD0B /* menu.cpp */,
 				849F07A02888DF1D00816376 /* LevelA.h */,
+				849F079F2888DF1D00816376 /* LevelA.cpp */,
+				E86896922DB8496E0058AD0B /* LevelB.h */,
+				E86896932DB849760058AD0B /* LevelB.cpp */,
+				E86896982DB88CC40058AD0B /* LevelC.h */,
+				E86896992DB88CCA0058AD0B /* LevelC.cpp */,
 			);
 			path = SDLProject;
 			sourceTree = "<group>";
@@ -190,9 +205,12 @@
 			files = (
 				849F079B2888D13900816376 /* Utility.cpp in Sources */,
 				849F079E2888DDF200816376 /* Scene.cpp in Sources */,
+				E86896972DB84FFB0058AD0B /* menu.cpp in Sources */,
 				DBDF1B532323DE3F007CECB1 /* main.cpp in Sources */,
+				E868969A2DB88CCD0058AD0B /* LevelC.cpp in Sources */,
 				8401114628864A3000A4D23F /* Map.cpp in Sources */,
 				849F07A12888DF1D00816376 /* LevelA.cpp in Sources */,
+				E86896942DB849770058AD0B /* LevelB.cpp in Sources */,
 				DBDF1B5E2323DE8D007CECB1 /* ShaderProgram.cpp in Sources */,
 				8493D153286BFEC300217CD6 /* Entity.cpp in Sources */,
 			);

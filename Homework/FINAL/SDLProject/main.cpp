@@ -22,16 +22,19 @@
 #include "Map.h"
 #include "Utility.h"
 #include "Scene.h"
+#include "Menu.h"
 #include "LevelA.h"
+#include "LevelB.h"
+#include "LevelC.h"
 
 // ————— CONSTANTS ————— //
 constexpr int WINDOW_WIDTH  = 640 * 2.2,
           WINDOW_HEIGHT = 480 * 2.2;
 
-constexpr float BG_RED     = 0.1922f,
-            BG_BLUE    = 0.549f,
-            BG_GREEN   = 0.9059f,
-            BG_OPACITY = 1.0f;
+constexpr float BG_RED     = 0.839f;
+constexpr float BG_GREEN   = 0.541f;
+constexpr float BG_BLUE    = 0.306f;
+constexpr float BG_OPACITY = 1.0f;
 
 constexpr int VIEWPORT_X = 0,
           VIEWPORT_Y = 0,
@@ -47,7 +50,10 @@ enum AppStatus { RUNNING, TERMINATED };
 
 // ————— GLOBAL VARIABLES ————— //
 Scene *g_current_scene;
+Menu *g_menu;
 LevelA *g_level_a;
+LevelB *g_level_b;
+LevelC *g_level_c;
 
 SDL_Window* g_display_window;
 
@@ -104,12 +110,12 @@ void initialise()
 
     glUseProgram(g_shader_program.get_program_id());
     
-    glClearColor(BG_RED, BG_BLUE, BG_GREEN, BG_OPACITY);
-    
+    glClearColor(BG_RED, BG_GREEN, BG_BLUE, BG_OPACITY);
     
     // ————— LEVEL A SETUP ————— //
-    g_level_a = new LevelA();
-    switch_to_scene(g_level_a);
+//    g_level_a = new LevelA();
+    g_menu = new Menu();
+    switch_to_scene(g_menu);
     
     // ————— BLENDING ————— //
     glEnable(GL_BLEND);
@@ -118,8 +124,14 @@ void initialise()
 
 void process_input()
 {
-    g_current_scene->get_state().player->set_movement(glm::vec3(0.0f));
-    g_current_scene->get_state().player2->set_movement(glm::vec3(0.0f));
+
+    if (g_current_scene->get_state().player != nullptr && g_current_scene->get_state().player->get_is_active()) {
+        g_current_scene->get_state().player->set_movement(glm::vec3(0.0f));
+    }
+    
+    if (g_current_scene->get_state().player2 != nullptr && g_current_scene->get_state().player2->get_is_active()) {
+        g_current_scene->get_state().player2->set_movement(glm::vec3(0.0f));
+    }
     
     SDL_Event event;
     while (SDL_PollEvent(&event))
@@ -139,30 +151,58 @@ void process_input()
                         g_app_status = TERMINATED;
                         break;
                         
+                    case SDLK_RETURN:
+                        if (g_current_scene == g_menu){
+                            g_level_a = new LevelA();
+                            switch_to_scene(g_level_a);
+                        }
+                        break;
+
+                    case SDLK_1:
+                        g_level_a = new LevelA();
+                        switch_to_scene(g_level_a);
+                        break;
+                    
+                    case SDLK_2:
+                        g_level_b = new LevelB();
+                        switch_to_scene(g_level_b);
+                        break;
+                        
+                    case SDLK_3:
+                        g_level_c = new LevelC();
+                        switch_to_scene(g_level_c);
+                        break;  
+                        
                     case SDLK_w:
-                        // ————— JUMPING for player 1 ————— //
-                        if (g_current_scene->get_state().player->get_collided_bottom())
-                        {
-                            g_current_scene->get_state().player->jump();
-                            Mix_PlayChannel(-1,  g_current_scene->get_state().jump_sfx, 0);
+                        if (g_current_scene->get_state().player != nullptr) {
+                            if (g_current_scene->get_state().player->get_collided_bottom())
+                            {
+                                g_current_scene->get_state().player->jump();
+                                Mix_PlayChannel(-1,  g_current_scene->get_state().jump_sfx, 0);
+                            }
                         }
                          break;
                     
                     case SDLK_UP:
-                        // ————— JUMPING for player 2 ————— //
-                        if (g_current_scene->get_state().player2->get_collided_bottom())
-                        {
-                            g_current_scene->get_state().player2->jump();
-                            Mix_PlayChannel(-1,  g_current_scene->get_state().jump_sfx, 0);
+                        if (g_current_scene->get_state().player2 != nullptr) {
+                            if (g_current_scene->get_state().player2->get_collided_bottom())
+                            {
+                                g_current_scene->get_state().player2->jump();
+                                Mix_PlayChannel(-1,  g_current_scene->get_state().jump_sfx, 0);
+                            }
                         }
                          break;
                     
                     case SDLK_e:
-                        g_current_scene->get_state().player->shoot_projectile();
+                        if (g_current_scene->get_state().player != nullptr) {
+                            g_current_scene->get_state().player->shoot_projectile();
+                        }
                         break;
                         
                     case SDLK_SLASH:
-                        g_current_scene->get_state().player2->shoot_projectile();
+                        if (g_current_scene->get_state().player2 != nullptr) {
+                            g_current_scene->get_state().player2->shoot_projectile();
+                        }
                         break;
                     
                     default:
@@ -177,31 +217,39 @@ void process_input()
     // ————— KEY HOLD ————— //
     const Uint8 *key_state = SDL_GetKeyboardState(NULL);
 
+    if (g_current_scene->get_state().player != nullptr) {
     // Player 1 controls (WASD)
-    if (key_state[SDL_SCANCODE_A])
-    {
-        g_current_scene->get_state().player->move_left();
-    }
-    else if (key_state[SDL_SCANCODE_D])
-    {
-        g_current_scene->get_state().player->move_right();
-    }
+        if (key_state[SDL_SCANCODE_A])
+        {
+            g_current_scene->get_state().player->move_left();
+        }
+        else if (key_state[SDL_SCANCODE_D])
+        {
+            g_current_scene->get_state().player->move_right();
+        }
      
-    if (glm::length(g_current_scene->get_state().player->get_movement()) > 1.0f)
-        g_current_scene->get_state().player->normalise_movement();
-    
+        if (glm::length(g_current_scene->get_state().player->get_movement()) > 1.0f)
+        {
+            g_current_scene->get_state().player->normalise_movement();
+        }
+    }
+
+    if (g_current_scene->get_state().player2 != nullptr) {
     // Player 2 controls (arrow keys)
-    if (key_state[SDL_SCANCODE_LEFT])
-    {
-        g_current_scene->get_state().player2->move_left();
-    }
-    else if (key_state[SDL_SCANCODE_RIGHT])
-    {
-        g_current_scene->get_state().player2->move_right();
-    }
+        if (key_state[SDL_SCANCODE_LEFT])
+        {
+            g_current_scene->get_state().player2->move_left();
+        }
+        else if (key_state[SDL_SCANCODE_RIGHT])
+        {
+            g_current_scene->get_state().player2->move_right();
+        }
      
-    if (glm::length(g_current_scene->get_state().player2->get_movement()) > 1.0f)
-        g_current_scene->get_state().player2->normalise_movement();
+        if (glm::length(g_current_scene->get_state().player2->get_movement()) > 1.0f)
+        {
+            g_current_scene->get_state().player2->normalise_movement();
+        }
+    }
 }
 
 void update()
@@ -227,6 +275,43 @@ void update()
     }
     
     g_accumulator = delta_time;
+   
+    if ((g_current_scene->get_state().player != nullptr && g_current_scene->get_state().player->get_lives() <= 0) || 
+        (g_current_scene->get_state().player2 != nullptr && g_current_scene->get_state().player2->get_lives() <= 0))
+    {
+        if (g_current_scene == g_level_a)
+        {
+            if (g_level_b == nullptr) {
+                g_level_b = new LevelB();
+            }
+            
+            Mix_PlayChannel(-1, g_current_scene->get_state().next_level, 0);
+            
+            switch_to_scene(g_level_b);
+            
+            g_current_scene->get_state().player->set_lives(4);
+            g_current_scene->get_state().player2->set_lives(4);
+            
+            g_current_scene->get_state().player->set_position(glm::vec3(4.0f, 8.0f, 0.0f));
+            g_current_scene->get_state().player2->set_position(glm::vec3(26.0f, 8.0f, 0.0f));
+        }
+        else if (g_current_scene == g_level_b) {
+            
+            if (g_level_c == nullptr) {
+                g_level_c = new LevelC();
+            }
+            
+            Mix_PlayChannel(-1, g_current_scene->get_state().next_level, 0);
+            
+            switch_to_scene(g_level_c);
+            
+            g_current_scene->get_state().player->set_lives(4);
+            g_current_scene->get_state().player2->set_lives(4);
+            
+            g_current_scene->get_state().player->set_position(glm::vec3(4.0f, 8.0f, 0.0f));
+            g_current_scene->get_state().player2->set_position(glm::vec3(29.0f, 8.0f, 0.0f));
+        }
+    }
     
     
     // ————— PLAYER CAMERA ————— //
@@ -234,13 +319,16 @@ void update()
     
     // if (g_current_scene->get_state().player->get_position().x > LEVEL1_LEFT_EDGE) {
     //     g_view_matrix = glm::translate(g_view_matrix, glm::vec3(-g_current_scene->get_state().player->get_position().x, 3.75, 0));
-    float player_mid_x = (g_current_scene->get_state().player->get_position().x + 
-                        g_current_scene->get_state().player2->get_position().x) / 2.0f;
-    
-    if (player_mid_x > LEVEL1_LEFT_EDGE) {
-        g_view_matrix = glm::translate(g_view_matrix, glm::vec3(-player_mid_x, 3.75, 0));
-    } else {
-        g_view_matrix = glm::translate(g_view_matrix, glm::vec3(-5, 3.75, 0));
+    if (g_current_scene->get_state().player != nullptr && g_current_scene->get_state().player2 != nullptr) 
+    {
+        float player_mid_x = (g_current_scene->get_state().player->get_position().x + 
+                            g_current_scene->get_state().player2->get_position().x) / 2.0f;
+        
+        if (player_mid_x > LEVEL1_LEFT_EDGE) {
+            g_view_matrix = glm::translate(g_view_matrix, glm::vec3(-player_mid_x, 3.75, 0));
+        } else {
+            g_view_matrix = glm::translate(g_view_matrix, glm::vec3(-5, 3.75, 0));
+        }
     }
 }
 
@@ -253,8 +341,6 @@ void render()
     // ————— RENDERING THE SCENE (i.e. map, character, enemies...) ————— //
     g_current_scene->render(&g_shader_program);
 
-    int player1_lives = g_current_scene->get_state().player->get_lives();
-    
     SDL_GL_SwapWindow(g_display_window);
 }
 
@@ -262,8 +348,11 @@ void shutdown()
 {    
     SDL_Quit();
     
-    // ————— DELETING LEVEL A DATA (i.e. map, character, enemies...) ————— //
-    delete g_level_a;
+    // Only delete the scenes we explicitly created
+    if (g_level_a != nullptr) delete g_level_a;
+    if (g_level_b != nullptr) delete g_level_b;
+    if (g_menu != nullptr) delete g_menu;
+  
 }
 
 // ————— GAME LOOP ————— //

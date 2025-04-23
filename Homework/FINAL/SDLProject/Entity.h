@@ -7,12 +7,13 @@
 // Forward declaration
 class Scene;
 
-enum EntityType { PLATFORM, PLAYER, ENEMY, PLAYER2, PROJECTILE, BACKGROUND };
+enum EntityType { PLATFORM, PLAYER, ENEMY, PLAYER2, PROJECTILE, BACKGROUND, HEALTH_BAR };
 enum AIType     { WALKER, GUARD            };
 enum AIState    { WALKING, IDLE, ATTACKING };
 
 
 enum AnimationDirection { LEFT, RIGHT, UP, DOWN };
+enum AnimationDirectionHealth { FOUR_HEALTH, THREE_HEALTH, TWO_HEALTH, ONE_HEALTH, EMPTY_HEALTH };
 
 class Entity
 {
@@ -20,7 +21,7 @@ private:
     bool m_is_active = true;
     
     int m_walking[4][4]; // 4x4 array for walking animations
-
+    int m_walking_health[4][5]; // 4x5 array for walking animations
     
     EntityType m_entity_type;
     AIType     m_ai_type;
@@ -61,7 +62,7 @@ private:
     
     
 //  Lives
-    int m_lives = 3;
+    int m_lives = 4;
     Entity* m_owner = nullptr;
     Scene* m_scene = nullptr;
     int m_enemy_lives = 10;
@@ -74,6 +75,9 @@ public:
     // ————— METHODS ————— //
     Entity();
     Entity(GLuint texture_id, float speed, glm::vec3 acceleration, float jump_power, int walking[4][4], float animation_time,
+        int animation_frames, int animation_index, int animation_cols,
+           int animation_rows, float width, float height, EntityType EntityType);
+    Entity(GLuint texture_id, float speed, glm::vec3 acceleration, float jump_power, int walking[5][1], float animation_time,
         int animation_frames, int animation_index, int animation_cols,
            int animation_rows, float width, float height, EntityType EntityType);
     Entity(GLuint texture_id, float speed, float width, float height, EntityType EntityType); // Simpler constructor
@@ -103,6 +107,13 @@ public:
     void face_right() { m_animation_indices = m_walking[RIGHT]; }
     void face_up() { m_animation_indices = m_walking[UP]; }
     void face_down() { m_animation_indices = m_walking[DOWN]; }
+
+    // New methods for health bar animations
+    void four_health() { m_animation_indices = m_walking_health[FOUR_HEALTH]; }
+    void three_health() { m_animation_indices = m_walking_health[THREE_HEALTH]; }
+    void two_health() { m_animation_indices = m_walking_health[TWO_HEALTH]; }
+    void one_health() { m_animation_indices = m_walking_health[ONE_HEALTH]; }
+    void empty_health() { m_animation_indices = m_walking_health[EMPTY_HEALTH]; }
 
     void move_left() { m_movement.x = -1.0f; face_left(); }
     void move_right() { m_movement.x = 1.0f;  face_right(); }
@@ -186,6 +197,17 @@ public:
             for (int j = 0; j < 4; ++j)
             {
                 m_walking[i][j] = walking[i][j];
+            }
+        }
+    }
+
+    void set_walking_health(int walking[5][1])
+    {
+        for (int i = 0; i < 5; ++i)
+        {
+            for (int j = 0; j < 5; ++j)
+            {
+                m_walking_health[i][j] = walking[i][j];
             }
         }
     }

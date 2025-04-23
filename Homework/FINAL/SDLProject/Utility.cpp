@@ -40,7 +40,6 @@ void Utility::draw_text(ShaderProgram *program, GLuint font_texture_id, std::str
     float width = 1.0f / FONTBANK_SIZE;
     float height = 1.0f / FONTBANK_SIZE;
 
-    
     std::vector<float> vertices;
     std::vector<float> texture_coordinates;
     

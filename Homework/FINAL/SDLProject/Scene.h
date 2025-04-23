@@ -28,11 +28,15 @@ struct GameState
     Entity *enemies;
     Entity *projectiles;
     Map *background_map;
+    Entity *p1_health_bar;
+    Entity *p2_health_bar;
+    Entity *enemy_health_bars;
     
     // ————— AUDIO ————— //
     Mix_Music *bgm;
     Mix_Chunk *jump_sfx;
     Mix_Chunk *shoot_sfx;
+    Mix_Chunk *next_level;
     
     // ————— POINTERS TO OTHER SCENES ————— //
     int next_scene_id;

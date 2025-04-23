@@ -86,6 +86,20 @@ Entity::Entity(GLuint texture_id, float speed, glm::vec3 acceleration, float jum
     set_walking(walking);
 }
 
+Entity::Entity(GLuint texture_id, float speed, glm::vec3 acceleration, float jump_power, int walking[5][1], float animation_time,
+    int animation_frames, int animation_index, int animation_cols,
+    int animation_rows, float width, float height, EntityType EntityType)
+    : m_position(0.0f), m_movement(0.0f), m_scale(1.0f, 1.0f, 0.0f), m_model_matrix(1.0f),
+    m_speed(speed),m_acceleration(acceleration), m_jumping_power(jump_power), m_animation_cols(animation_cols),
+    m_animation_frames(animation_frames), m_animation_index(animation_index),
+    m_animation_rows(animation_rows), m_animation_indices(nullptr),
+    m_animation_time(animation_time), m_texture_id(texture_id), m_velocity(0.0f),
+    m_width(width), m_height(height), m_entity_type(EntityType)
+{
+    four_health();
+    set_walking_health(walking);
+}
+
 // Simpler constructor for partial initialization
 Entity::Entity(GLuint texture_id, float speed,  float width, float height, EntityType EntityType)
     : m_position(0.0f), m_movement(0.0f), m_scale(1.0f, 1.0f, 0.0f), m_model_matrix(1.0f),
@@ -349,6 +363,8 @@ void Entity::update(float delta_time, Entity *player, Entity *collidable_entitie
     
     m_model_matrix = glm::mat4(1.0f);
     m_model_matrix = glm::translate(m_model_matrix, m_position);
+    // Apply scaling based on width and height
+    m_model_matrix = glm::scale(m_model_matrix, glm::vec3(m_width, m_height, 1.0f));
 }
 
 
