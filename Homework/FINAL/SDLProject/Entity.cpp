@@ -26,6 +26,25 @@ void Entity::ai_activate(Entity *player)
         case GUARD:
             ai_guard(player);
             break;
+
+        case FLYER:
+            switch (m_ai_state) {
+                case DIAGONAL_FLY_RIGHT:
+                    ai_flyer_diagonal_right();
+                    break;
+                    
+                case DIAGONAL_FLY_LEFT:
+                    ai_flyer_diagonal_left();
+                    break;
+                    
+                case OVAL_FLY:
+                   ai_flyer_oval();
+                    break;
+                    
+                default:
+                    break;
+            }
+            break;
             
         default:
             break;
@@ -34,21 +53,41 @@ void Entity::ai_activate(Entity *player)
 
 void Entity::ai_walk()
 {
-    m_movement = glm::vec3(-1.0f, 0.0f, 0.0f);
+    if (m_position.x > 17.0f) {
+        m_movement = glm::vec3(-1.0f, 0.0f, 0.0f);
+    } else if (m_position.x < 14.0f) {
+        m_movement = glm::vec3(1.0f, 0.0f, 0.0f);
+    } else if (m_movement.x == 0.0f) {
+        m_movement = glm::vec3(1.0f, 0.0f, 0.0f);
+    }
 }
 
 void Entity::ai_guard(Entity *player)
 {
+    
+    if (player == nullptr) return;
+    
+    
     switch (m_ai_state) {
         case IDLE:
-            if (glm::distance(m_position, player->get_position()) < 3.0f) m_ai_state = WALKING;
+            // Switch to walking state if player is within detection range
+            if (glm::distance(m_position, player->get_position()) < 20.0f) {
+                m_ai_state = WALKING;
+            }
             break;
             
         case WALKING:
+            // Move towards the player
             if (m_position.x > player->get_position().x) {
                 m_movement = glm::vec3(-1.0f, 0.0f, 0.0f);
+
             } else {
                 m_movement = glm::vec3(1.0f, 0.0f, 0.0f);
+   
+            }
+            
+            if (glm::length(m_movement) > 1.0f) {
+                m_movement = glm::normalize(m_movement);
             }
             break;
             
@@ -59,6 +98,154 @@ void Entity::ai_guard(Entity *player)
             break;
     }
 }
+
+void Entity::ai_flyer_diagonal_right() {
+    // Define exact points
+    glm::vec3 start_point = glm::vec3(25.00000000f, -14.00000000f, 0.00000000f);
+    glm::vec3 mid_point = glm::vec3(17.00000000f, -4.00000000f, 0.00000000f);
+    glm::vec3 end_point = glm::vec3(13.60000000f, 0.00000000f, 0.00000000f);
+    
+    static bool going_forward = true;
+    float flight_speed = 10.0f;
+     if (going_forward) {
+        if (m_position.x <= end_point.x) {
+            going_forward = false;
+        } else {
+            m_movement = glm::vec3(-0.60000000f, 0.80000000f, 0.00000000f) * flight_speed;
+        }
+    } else {
+        if (m_position.x >= start_point.x || m_position.y <= -13.5f) {
+            going_forward = true;
+        } else {
+            m_movement = glm::vec3(0.60000000f, -0.80000000f, 0.00000000f) * flight_speed;
+        }
+    }
+}
+
+void Entity::ai_flyer_oval() {
+    // Define the oval center point and dimensions
+    glm::vec3 center(15.0f, -4.0f, 0.0f);
+    float width = 7.0f;  // Half-width of the oval
+    float height = 4.0f; // Half-height of the oval
+    
+    // Use a time-based parameter to move around the oval
+    static float t = 0.0f;
+    float flight_speed = 7.0f;
+    
+    // Calculate the position on the oval using parametric equations
+    float x = center.x + width * cos(t);
+    float y = center.y + height * sin(t);
+    
+    // Calculate the target position
+    glm::vec3 target_position(x, y, 0.0f);
+    
+    // Calculate the direction to move (tangent to the oval)
+    float dx = -width * sin(t);
+    float dy = height * cos(t);
+    glm::vec3 direction(dx, dy, 0.0f);
+    
+    // Normalize the direction vector
+    direction = glm::normalize(direction);
+    
+    // Set movement based on the direction
+    m_movement = direction * flight_speed;
+    
+//    // Face the correct direction based on movement
+//    if (m_movement.x < 0) {
+//        face_left();
+//    } else {
+//        face_right();
+//    }
+    
+    // Increment the parameter for the next frame
+    t += 0.02f;
+    if (t > 2.0f * M_PI) {
+        t -= 2.0f * M_PI;  // Reset after a complete cycle
+    }
+
+    // Define the oval path points
+    glm::vec3 bottom_point(15.0f, -7.0f, 0.0f);
+    glm::vec3 left_point(7.0f, -4.0f, 0.0f);
+    glm::vec3 right_point(22.0f, -4.0f, 0.0f);
+    glm::vec3 top_point(15.0f, -1.0f, 0.0f);
+    
+    static int current_segment = 0;
+    flight_speed = 5.0f; // Slightly slower for the oval path
+    
+    // Calculate distances to each point to determine which segment we're closest to
+    float dist_to_bottom = glm::distance(m_position, bottom_point);
+    float dist_to_left = glm::distance(m_position, left_point);
+    float dist_to_right = glm::distance(m_position, right_point);
+    float dist_to_top = glm::distance(m_position, top_point);
+    
+    // If we're very close to the current target point, move to the next segment
+    const float POINT_REACH_THRESHOLD = 0.5f;
+    
+    // Points in sequence: bottom -> left -> top -> right -> bottom
+    if ((current_segment == 0 && dist_to_left < POINT_REACH_THRESHOLD) ||
+        (current_segment == 1 && dist_to_top < POINT_REACH_THRESHOLD) ||
+        (current_segment == 2 && dist_to_right < POINT_REACH_THRESHOLD) ||
+        (current_segment == 3 && dist_to_bottom < POINT_REACH_THRESHOLD)) {
+        current_segment = (current_segment + 1) % 4;
+    }
+    
+    // Set movement direction based on current segment
+    switch (current_segment) {
+        case 0: // Bottom to Left
+            m_movement = glm::normalize(left_point - m_position) * flight_speed;
+            face_left(); // Make the enemy face left
+            break;
+            
+        case 1: // Left to Top
+            m_movement = glm::normalize(top_point - m_position) * flight_speed;
+            break;
+            
+        case 2: // Top to Right
+            m_movement = glm::normalize(right_point - m_position) * flight_speed;
+            face_right(); // Make the enemy face right
+            break;
+            
+        case 3: // Right to Bottom
+            m_movement = glm::normalize(bottom_point - m_position) * flight_speed;
+            break;
+    }
+    
+    // Safety check for NaN or infinite positions
+    if (std::isinf(m_position.x) || std::isnan(m_position.x) ||
+        std::isinf(m_position.y) || std::isnan(m_position.y) ||
+        m_position.x < 0.0f || m_position.x > 30.0f ||
+        m_position.y < -20.0f || m_position.y > 5.0f) {
+        
+        // Reset to the bottom point
+        m_position = bottom_point;
+        current_segment = 0;
+        m_velocity = glm::vec3(0.0f);
+    }
+}
+
+void Entity::ai_flyer_diagonal_left() {
+    glm::vec3 start_point = glm::vec3(6.00000000f, -14.00000000f, 0.00000000f);
+    glm::vec3 mid_point = glm::vec3(11.00000000f, -7.33000000f, 0.00000000f);
+    glm::vec3 end_point = glm::vec3(16.54000000f, 0.00000000f, 0.00000000f);
+    
+    static bool going_forward = true;
+    float flight_speed = 10.0f;
+    
+    if (going_forward) {
+        if (m_position.x >= end_point.x) {
+            going_forward = false;
+        } else {
+            m_movement = glm::vec3(0.60000000f, 0.80000000f, 0.00000000f) * flight_speed;
+        }
+    } else {
+        if (m_position.x <= start_point.x || m_position.y <= -13.5f) {
+            going_forward = true;
+        } else {
+            m_movement = glm::vec3(-0.60000000f, -0.80000000f, 0.00000000f) * flight_speed;
+        }
+    }
+}
+
 // Default constructor
 Entity::Entity()
     : m_position(0.0f), m_movement(0.0f), m_scale(1.0f, 1.0f, 0.0f), m_model_matrix(1.0f),
@@ -98,6 +285,10 @@ Entity::Entity(GLuint texture_id, float speed, glm::vec3 acceleration, float jum
 {
     four_health();
     set_walking_health(walking);
+    
+    if (EntityType == HEALTH_BAR) {
+        m_movement = glm::vec3(0.0f);
+    }
 }
 
 // Simpler constructor for partial initialization
@@ -314,7 +505,6 @@ void const Entity::check_collision_x(Map *map)
 }
 void Entity::update(float delta_time, Entity *player, Entity *collidable_entities, int collidable_entity_count, Map *map)
 {
-    if (!m_is_active) return;
  
     m_collided_top    = false;
     m_collided_bottom = false;
@@ -322,6 +512,10 @@ void Entity::update(float delta_time, Entity *player, Entity *collidable_entitie
     m_collided_right  = false;
     
     if (m_entity_type == ENEMY) ai_activate(player);
+    
+    if (m_entity_type == HEALTH_BAR) {
+        m_movement = glm::vec3(0.0f);
+    }
     
     if (m_animation_indices != NULL)
     {
@@ -344,7 +538,16 @@ void Entity::update(float delta_time, Entity *player, Entity *collidable_entitie
     }
     
     m_velocity.x = m_movement.x * m_speed;
-    m_velocity += m_acceleration * delta_time;
+    
+    // For flyers, set the y velocity directly from movement
+    if (m_ai_type == FLYER) {
+        m_velocity.y = m_movement.y * m_speed;
+        m_velocity.x = m_movement.x * m_speed;
+    } else {
+        m_velocity += m_acceleration * delta_time;
+    }
+    
+   
     
     if (m_is_jumping)
     {

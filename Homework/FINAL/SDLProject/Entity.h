@@ -8,8 +8,8 @@
 class Scene;
 
 enum EntityType { PLATFORM, PLAYER, ENEMY, PLAYER2, PROJECTILE, BACKGROUND, HEALTH_BAR };
-enum AIType     { WALKER, GUARD            };
-enum AIState    { WALKING, IDLE, ATTACKING };
+enum AIType     { WALKER, GUARD, FLYER };
+enum AIState    { WALKING, IDLE, ATTACKING, DIAGONAL_FLY_RIGHT, DIAGONAL_FLY_LEFT, OVAL_FLY };
 
 
 enum AnimationDirection { LEFT, RIGHT, UP, DOWN };
@@ -100,6 +100,9 @@ public:
     void ai_activate(Entity *player);
     void ai_walk();
     void ai_guard(Entity *player);
+    void ai_flyer_diagonal_right();
+    void ai_flyer_diagonal_left();
+    void ai_flyer_oval();
     
     void normalise_movement() { m_movement = glm::normalize(m_movement); }
 

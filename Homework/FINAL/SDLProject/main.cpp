@@ -26,14 +26,29 @@
 #include "LevelA.h"
 #include "LevelB.h"
 #include "LevelC.h"
+#include "endGameP1.h"
+#include "endGameP2.h"
 
 // ————— CONSTANTS ————— //
 constexpr int WINDOW_WIDTH  = 640 * 2.2,
           WINDOW_HEIGHT = 480 * 2.2;
 
-constexpr float BG_RED     = 0.839f;
-constexpr float BG_GREEN   = 0.541f;
-constexpr float BG_BLUE    = 0.306f;
+constexpr float MENU_BG_RED     = 0.839f;
+constexpr float MENU_BG_GREEN   = 0.541f;
+constexpr float MENU_BG_BLUE    = 0.306f;
+
+constexpr float LEVEL_A_BG_RED   = 0.839f;
+constexpr float LEVEL_A_BG_GREEN = 0.541f;
+constexpr float LEVEL_A_BG_BLUE  = 0.306f;
+
+constexpr float LEVEL_B_BG_RED   = 0.18f;
+constexpr float LEVEL_B_BG_GREEN = 0.42f;
+constexpr float LEVEL_B_BG_BLUE  = 0.21f;
+
+constexpr float LEVEL_C_BG_RED   = 0.1f;
+constexpr float LEVEL_C_BG_GREEN = 0.1f;
+constexpr float LEVEL_C_BG_BLUE  = 0.4f;
+
 constexpr float BG_OPACITY = 1.0f;
 
 constexpr int VIEWPORT_X = 0,
@@ -45,6 +60,8 @@ constexpr char V_SHADER_PATH[] = "shaders/vertex_textured.glsl",
            F_SHADER_PATH[] = "shaders/fragment_textured.glsl";
 
 constexpr float MILLISECONDS_IN_SECOND = 1000.0;
+float g_invert_effect_timer = 0.0f;
+bool g_invert_effect_active = false;
 
 enum AppStatus { RUNNING, TERMINATED };
 
@@ -54,6 +71,12 @@ Menu *g_menu;
 LevelA *g_level_a;
 LevelB *g_level_b;
 LevelC *g_level_c;
+endGameP1 *g_endGamePlayer1;
+endGameP2 *g_endGamePlayer2;
+
+// Point system
+int player1_points = 0;
+int player2_points = 0;
 
 SDL_Window* g_display_window;
 
@@ -68,6 +91,22 @@ void switch_to_scene(Scene *scene)
 {
     g_current_scene = scene;
     g_current_scene->initialise();
+    
+    // Change background color based on which scene we're switching to
+    if (scene == g_menu) {
+        glClearColor(MENU_BG_RED, MENU_BG_GREEN, MENU_BG_BLUE, BG_OPACITY);
+    } 
+    else if (scene == g_level_a) {
+        glClearColor(LEVEL_A_BG_RED, LEVEL_A_BG_GREEN, LEVEL_A_BG_BLUE, BG_OPACITY);
+    }
+    else if (scene == g_level_b) {
+        glClearColor(LEVEL_B_BG_RED, LEVEL_B_BG_GREEN, LEVEL_B_BG_BLUE, BG_OPACITY);
+    }
+    else if (scene == g_level_c) {
+        glClearColor(LEVEL_C_BG_RED, LEVEL_C_BG_GREEN, LEVEL_C_BG_BLUE, BG_OPACITY);
+    } else if (scene == g_endGamePlayer1 || scene == g_endGamePlayer2) {
+        glClearColor(MENU_BG_RED, MENU_BG_GREEN, MENU_BG_BLUE, BG_OPACITY);
+    }
 }
 
 void initialise();
@@ -101,6 +140,7 @@ void initialise()
     glViewport(VIEWPORT_X, VIEWPORT_Y, VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
     
     g_shader_program.load(V_SHADER_PATH, F_SHADER_PATH);
+    g_shader_program.set_invert_colors(0);
     
     g_view_matrix = glm::mat4(1.0f);
     g_projection_matrix = glm::ortho(-15.0f, 15.0f, -11.25f, 11.25f, -1.0f, 1.0f);
@@ -110,10 +150,18 @@ void initialise()
 
     glUseProgram(g_shader_program.get_program_id());
     
-    glClearColor(BG_RED, BG_GREEN, BG_BLUE, BG_OPACITY);
+    g_level_a = nullptr;
+    g_level_b = nullptr;
+    g_level_c = nullptr;
+    g_menu = nullptr;
+    g_endGamePlayer1 = nullptr;
+    g_endGamePlayer2 = nullptr;
     
     // ————— LEVEL A SETUP ————— //
-//    g_level_a = new LevelA();
+    if (g_menu != nullptr){
+        delete g_menu;
+    }
+    
     g_menu = new Menu();
     switch_to_scene(g_menu);
     
@@ -152,23 +200,35 @@ void process_input()
                         break;
                         
                     case SDLK_RETURN:
-                        if (g_current_scene == g_menu){
-                            g_level_a = new LevelA();
-                            switch_to_scene(g_level_a);
+                        if (g_level_a != nullptr) {
+                            delete g_level_a;
                         }
+                        
+                        g_level_a = new LevelA();
+                        switch_to_scene(g_level_a);
+                        
                         break;
 
                     case SDLK_1:
+                        if (g_level_a != nullptr) {
+                            delete g_level_a;
+                        }
                         g_level_a = new LevelA();
                         switch_to_scene(g_level_a);
                         break;
                     
                     case SDLK_2:
+                        if (g_level_b != nullptr) {
+                            delete g_level_b;
+                        }
                         g_level_b = new LevelB();
                         switch_to_scene(g_level_b);
                         break;
                         
                     case SDLK_3:
+                        if (g_level_c != nullptr) {
+                            delete g_level_c;
+                        }
                         g_level_c = new LevelC();
                         switch_to_scene(g_level_c);
                         break;  
@@ -281,38 +341,92 @@ void update()
     {
         if (g_current_scene == g_level_a)
         {
-            if (g_level_b == nullptr) {
-                g_level_b = new LevelB();
+            // Award points based on who survived
+            if (g_current_scene->get_state().player != nullptr && g_current_scene->get_state().player->get_lives() <= 0) {
+                // Player 1 died, award point to player 2
+                player2_points++;
+            } else if (g_current_scene->get_state().player2 != nullptr && g_current_scene->get_state().player2->get_lives() <= 0) {
+                // Player 2 died, award point to player 1
+                player1_points++;
             }
+            
+            if (g_level_b != nullptr) {
+                delete g_level_b;
+            }
+            
+            g_level_b = new LevelB();
             
             Mix_PlayChannel(-1, g_current_scene->get_state().next_level, 0);
             
             switch_to_scene(g_level_b);
             
-            g_current_scene->get_state().player->set_lives(4);
-            g_current_scene->get_state().player2->set_lives(4);
-            
-            g_current_scene->get_state().player->set_position(glm::vec3(4.0f, 8.0f, 0.0f));
-            g_current_scene->get_state().player2->set_position(glm::vec3(26.0f, 8.0f, 0.0f));
         }
         else if (g_current_scene == g_level_b) {
             
-            if (g_level_c == nullptr) {
-                g_level_c = new LevelC();
+ 
+            if (g_current_scene->get_state().player != nullptr && g_current_scene->get_state().player->get_lives() <= 0) {
+                player2_points++;
+            } else if (g_current_scene->get_state().player2 != nullptr && g_current_scene->get_state().player2->get_lives() <= 0) {
+                player1_points++;
             }
+            
+            if (g_level_c != nullptr) {
+                delete g_level_c;
+            }
+            
+            g_level_c = new LevelC();
             
             Mix_PlayChannel(-1, g_current_scene->get_state().next_level, 0);
             
             switch_to_scene(g_level_c);
             
-            g_current_scene->get_state().player->set_lives(4);
-            g_current_scene->get_state().player2->set_lives(4);
+        }
+        else if (g_current_scene == g_level_c){
+                
+            if (g_current_scene->get_state().player != nullptr && g_current_scene->get_state().player->get_lives() <= 0) {
+                player2_points++;
+            } else if (g_current_scene->get_state().player2 != nullptr && g_current_scene->get_state().player2->get_lives() <= 0) {
+                player1_points++;
+            }
             
-            g_current_scene->get_state().player->set_position(glm::vec3(4.0f, 8.0f, 0.0f));
-            g_current_scene->get_state().player2->set_position(glm::vec3(29.0f, 8.0f, 0.0f));
+            // PLayer 1 wins
+            if (player1_points > player2_points) 
+            {
+                if (g_endGamePlayer1 != nullptr) { delete g_endGamePlayer1; }
+                g_endGamePlayer1 = new endGameP1();
+                switch_to_scene(g_endGamePlayer1);
+            } else if (player2_points > player1_points) 
+            {
+                if (g_endGamePlayer2 != nullptr) { delete g_endGamePlayer2; }
+                g_endGamePlayer2 = new endGameP2();
+                switch_to_scene(g_endGamePlayer2);
+            }
         }
     }
     
+    // Check if any player has 1 health
+    bool player_has_critical_health = (g_current_scene->get_state().player != nullptr && 
+                         g_current_scene->get_state().player->get_lives() == 1) ||
+                        (g_current_scene->get_state().player2 != nullptr && 
+                         g_current_scene->get_state().player2->get_lives() == 1);
+    
+
+    // shader effect for critical health
+    static bool previous_health_status = false;
+    if (player_has_critical_health && !previous_health_status) {
+        g_invert_effect_active = true;
+        g_invert_effect_timer = 0.3f;
+        g_shader_program.set_invert_colors(1);
+    }
+    if (g_invert_effect_active) {
+        g_invert_effect_timer -= FIXED_TIMESTEP;
+        
+        if (g_invert_effect_timer <= 0.0f) {
+            g_invert_effect_active = false;
+            g_shader_program.set_invert_colors(0);
+        }
+    }
+    previous_health_status = player_has_critical_health;
     
     // ————— PLAYER CAMERA ————— //
     g_view_matrix = glm::mat4(1.0f);
@@ -351,8 +465,10 @@ void shutdown()
     // Only delete the scenes we explicitly created
     if (g_level_a != nullptr) delete g_level_a;
     if (g_level_b != nullptr) delete g_level_b;
+    if (g_level_c != nullptr) delete g_level_c;
     if (g_menu != nullptr) delete g_menu;
-  
+    if (g_endGamePlayer1 != nullptr) delete g_endGamePlayer1;
+    if (g_endGamePlayer2 != nullptr) delete g_endGamePlayer2;
 }
 
 // ————— GAME LOOP ————— //

@@ -4,6 +4,7 @@ class LevelB : public Scene {
 public:
     // ————— STATIC ATTRIBUTES ————— //
     int ENEMY_COUNT = 1;
+    bool m_danger_music_playing = false;
     
     // ————— DESTRUCTOR ————— //
     ~LevelB();

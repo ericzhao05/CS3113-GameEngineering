@@ -27,7 +27,7 @@ struct GameState
     Entity *player2;
     Entity *enemies;
     Entity *projectiles;
-    Map *background_map;
+    Entity *background_map;
     Entity *p1_health_bar;
     Entity *p2_health_bar;
     Entity *enemy_health_bars;
